@@ -1,0 +1,672 @@
+<title>Atelier Système de Londres</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Symbols+2&display=swap">
+<style>
+/* Mise en page : le plateau est le héros à gauche, le panneau du coach à droite ; le schéma de référence en dessous. */
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#16202B; --muted:#586577; --line:#D2D9E1;
+  --accent:#A85E07; --accent-ink:#FFFFFF; --accent-soft:#F5E6D1;
+  --sq-light:#E2E8EE; --sq-dark:#7D93A9; --coord-on-light:#6F859B; --coord-on-dark:#E7ECF1;
+  --hl:rgba(236,170,50,.55); --sel:rgba(30,110,180,.42); --hint:rgba(30,110,180,.9);
+  --good:#1B7146; --good-soft:#DCF0E4; --bad:#B0281F; --bad-soft:#F8E0DD;
+  --w-fill:#FFFFFF; --w-line:#121820; --b-fill:#181D24;
+  --f-display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-piece:"Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans","Apple Symbols",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1319; --surface:#161D26; --ink:#E4E9EF; --muted:#98A4B3; --line:#28323E;
+    --accent:#EBA544; --accent-ink:#1C1305; --accent-soft:#3A2911;
+    --sq-light:#C7D0DA; --sq-dark:#5D738A; --coord-on-light:#5D738A; --coord-on-dark:#D6DEE6;
+    --good:#62C893; --good-soft:#143022; --bad:#F38B82; --bad-soft:#3B1C19;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1319; --surface:#161D26; --ink:#E4E9EF; --muted:#98A4B3; --line:#28323E;
+  --accent:#EBA544; --accent-ink:#1C1305; --accent-soft:#3A2911;
+  --sq-light:#C7D0DA; --sq-dark:#5D738A; --coord-on-light:#5D738A; --coord-on-dark:#D6DEE6;
+  --good:#62C893; --good-soft:#143022; --bad:#F38B82; --bad-soft:#3B1C19;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+
+/* En-tête */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.eyebrow .nt{text-transform:none;letter-spacing:.02em;margin-left:6px;color:var(--accent)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,5vw,48px);line-height:1.02;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h1 .diag{color:var(--accent)}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px}
+.tab{border:0;background:transparent;padding:8px 14px;border-radius:7px;font-weight:600;cursor:pointer;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+
+/* Choix de ligne */
+.lines{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+@media (max-width:560px){.lines{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.line-btn{padding:10px 12px}.line-btn .nm{font-size:15px}.line-btn .vs{font-size:11.5px}}
+.line-btn{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px;cursor:pointer;display:grid;gap:4px}
+.line-btn:hover{border-color:var(--muted)}
+.line-btn[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.line-btn .nm{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.2}
+.line-btn .vs{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.chip{justify-self:start;font-size:11.5px;font-weight:600;letter-spacing:.04em;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-top:4px}
+.chip.prog{border-color:var(--accent);color:var(--accent)}
+.chip.done{background:var(--good-soft);border-color:transparent;color:var(--good)}
+
+/* Espace de travail */
+.workspace{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.workspace{grid-template-columns:minmax(0,1fr)}}
+.board-col{display:grid;gap:12px;min-width:0}
+.board{container-type:inline-size;display:grid;grid-template-columns:repeat(8,1fr);width:100%;max-width:100%;aspect-ratio:1;border-radius:6px;overflow:hidden;box-shadow:0 1px 0 var(--line),0 10px 30px -12px rgba(10,20,35,.35);user-select:none;-webkit-user-select:none}
+.sq{position:relative;border:0;padding:0;margin:0;display:grid;place-items:center;aspect-ratio:1;background:var(--sq-light);cursor:default}
+.sq.dk{background:var(--sq-dark)}
+.board.live .sq{cursor:pointer}
+.sq::before{content:"";position:absolute;inset:0;pointer-events:none}
+.sq.last::before{background:var(--hl)}
+.sq.sel::before{background:var(--sel)}
+.sq.hint::before{box-shadow:inset 0 0 0 4px var(--hint)}
+.sq.focus::after{content:"";position:absolute;inset:14%;border:3px dashed var(--accent);border-radius:50%;pointer-events:none;opacity:.95}
+.sq.ok::before{background:rgba(40,160,95,.55)}
+.sq.ko::before{background:rgba(205,50,40,.55)}
+.pc{position:relative;width:1em;height:1em;font-family:var(--f-piece);font-size:10.2cqi;line-height:1;pointer-events:none;z-index:1}
+.pc span{position:absolute;inset:0;text-align:center}
+.pc.w .f{color:var(--w-fill)}
+.pc.w .o{color:var(--w-line)}
+.pc.b .f{color:var(--b-fill)}
+.pc.b .o{display:none}
+.co{position:absolute;font-family:var(--f-mono);font-size:2.3cqi;font-weight:600;line-height:1;pointer-events:none;z-index:2}
+.co.r{top:4%;left:5%}
+.co.f{bottom:4%;right:6%}
+.sq .co{color:var(--coord-on-light)}
+.sq.dk .co{color:var(--coord-on-dark)}
+.board-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.turn{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.turn b{color:var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:600;font-size:14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.icon{min-width:42px;font-family:var(--f-mono)}
+
+/* Panneau du coach */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;display:grid;gap:18px;min-width:0}
+.panel h2{font-family:var(--f-display);font-weight:600;font-size:22px;line-height:1.2;margin:0;text-wrap:balance}
+.panel .sub{color:var(--muted);margin:2px 0 0;font-size:14px}
+.now{display:grid;gap:6px;padding:16px;border-radius:10px;background:var(--bg)}
+.now .san{font-family:var(--f-mono);font-weight:600;font-size:26px;line-height:1.1}
+.now .san small{font-size:14px;color:var(--muted);font-weight:500}
+.now p{margin:0;max-width:62ch}
+.movelist{display:grid;grid-template-columns:auto 1fr 1fr;gap:2px 6px;font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums;align-items:center}
+.movelist .no{color:var(--muted);padding-right:4px}
+.mv{border:0;background:transparent;text-align:left;padding:3px 8px;border-radius:6px;cursor:pointer}
+.mv:hover{background:var(--bg)}
+.mv.cur{background:var(--ink);color:var(--bg)}
+.mv.future{color:var(--muted);opacity:.6}
+.plan{border-left:3px solid var(--accent);padding:2px 0 2px 14px;display:grid;gap:4px}
+.plan .lbl,.lbl{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.plan p{margin:0}
+.fb{padding:14px 16px;border-radius:10px;background:var(--bg);display:grid;gap:4px}
+.fb p{margin:0}
+.fb.good{background:var(--good-soft)}
+.fb.good strong{color:var(--good)}
+.fb.bad{background:var(--bad-soft)}
+.fb.bad strong{color:var(--bad)}
+.log{display:grid;gap:6px;font-size:14px;color:var(--muted);margin:0;padding:0;list-style:none}
+.log li{padding-left:14px;position:relative}
+.log li::before{content:"";position:absolute;left:0;top:.65em;width:6px;height:6px;border-radius:50%;background:var(--line)}
+.stats{display:flex;flex-wrap:wrap;gap:18px;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.stats b{color:var(--ink);font-size:18px;display:block}
+.qprompt{font-size:17px;font-weight:500;margin:0;max-width:60ch}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dot{width:22px;height:6px;border-radius:3px;background:var(--line)}
+.dot.cur{background:var(--ink)}
+.dot.ok{background:var(--good)}
+.dot.ko{background:var(--bad)}
+.howto{font-size:13.5px;color:var(--muted);margin:0}
+
+/* Référence */
+.ref{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start;border-top:1px solid var(--line);padding-top:28px}
+@media (max-width:900px){.ref{grid-template-columns:minmax(0,1fr)}}
+.ref h3{font-family:var(--f-display);font-weight:600;font-size:19px;margin:0 0 10px}
+.mini{max-width:260px}
+.mini .board{box-shadow:none;border:1px solid var(--line)}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:2px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:28px 64px 1fr;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);counter-increment:s}
+.steps li::before{content:counter(s);font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.steps .m{font-family:var(--f-mono);font-weight:600}
+.steps .d{font-size:14px;color:var(--muted)}
+.watch{display:grid;gap:14px}
+.watch div{display:grid;gap:2px}
+.watch strong{font-family:var(--f-mono);font-size:15px}
+.watch p{margin:0;font-size:14.5px;max-width:52ch}
+.legend{font-size:13px;color:var(--muted);margin:0}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
+.linkbtn{border:0;background:none;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:13px}
+.linkbtn.warn{color:var(--bad);font-weight:600}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Répertoire des Blancs <span class="nt">1.d4 · 2.Ff4</span></p>
+      <h1>Le fou sort <span class="diag">avant e3</span>.</h1>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Mode">
+      <button class="tab" role="tab" id="tab-study" data-mode="study" aria-selected="true">Étudier</button>
+      <button class="tab" role="tab" id="tab-train" data-mode="train" aria-selected="false">S’entraîner</button>
+      <button class="tab" role="tab" id="tab-quiz" data-mode="quiz" aria-selected="false">Réflexes</button>
+    </div>
+  </header>
+
+  <nav class="lines" id="lines" aria-label="Lignes"></nav>
+
+  <main class="workspace">
+    <section class="board-col" aria-label="Échiquier">
+      <div class="board" id="board"></div>
+      <div class="board-bar">
+        <span class="turn" id="turn"></span>
+        <div class="btns" id="boardBtns"></div>
+      </div>
+    </section>
+    <section class="panel" id="panel" aria-live="polite"></section>
+  </main>
+
+  <section class="ref" aria-label="Référence">
+    <div>
+      <h3>Le schéma à viser</h3>
+      <div class="mini"><div class="board" id="mini"></div></div>
+    </div>
+    <div>
+      <h3>Ordre de développement</h3>
+      <ol class="steps">
+        <li><span class="m">d4</span><span class="d">Prendre le centre</span></li>
+        <li><span class="m">Ff4</span><span class="d">Le fou sort avant e3</span></li>
+        <li><span class="m">e3</span><span class="d">Soutenir d4, libérer le fou f1</span></li>
+        <li><span class="m">Cf3</span><span class="d">Contrôler e5, préparer le roque</span></li>
+        <li><span class="m">c3</span><span class="d">Pyramide c3-d4-e3</span></li>
+        <li><span class="m">Cbd2</span><span class="d">Soutenir e4 et f3</span></li>
+        <li><span class="m">Fd3</span><span class="d">Viser h7</span></li>
+        <li><span class="m">O-O</span><span class="d">Roi à l’abri</span></li>
+      </ol>
+    </div>
+    <div class="watch">
+      <h3>Deux cases à surveiller</h3>
+      <div>
+        <strong>Le fou en f4</strong>
+        <p>…Fd6 propose l’échange : réponds Fg3. Contre …Ch5 ou …e5, prévois une retraite avec h3, le fou se replie en h2.</p>
+      </div>
+      <div>
+        <strong>Le pion b2</strong>
+        <p>Ton fou c1 est parti, donc b2 n’est plus défendu. Dès qu’une dame noire arrive en b6, vérifie b2 avant de continuer : Db3 est le réflexe.</p>
+      </div>
+      <p class="legend">C’est un schéma de développement, pas une suite à jouer automatiquement.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Notation française : R roi, D dame, T tour, F fou, C cavalier.</span>
+    <button class="linkbtn" id="resetBtn" type="button">Effacer ma progression</button>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const FILES = "abcdefgh";
+  const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+  const GLYPH_F = {k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+  const GLYPH_O = {k:"♔",q:"♕",r:"♖",b:"♗",n:"♘",p:"♙"};
+  const NAMES = {k:"roi",q:"dame",r:"tour",b:"fou",n:"cavalier",p:"pion"};
+  const VS = "︎";
+
+  function m(s,u,n,f){ return {s:s,u:u,n:n||"",f:f||[]}; }
+
+  const LINES = [
+    { id:"classique", name:"Londres classique", vs:"contre 1…d5",
+      plan:"Petit roque, puis Ce5 ou la poussée e4 si elle est bien préparée. Fg3 garde ton fou actif quand le fou noir arrive en d6.",
+      moves:[
+        m("d4","d2d4","Tu prends le centre et ouvres la diagonale de ton fou c1."),
+        m("d5","d7d5","Les Noirs répondent au centre de façon symétrique."),
+        m("Ff4","c1f4","Le coup signature : le fou sort avant e3. Après e3, il resterait enfermé derrière tes pions.",["f4"]),
+        m("Cf6","g8f6","Développement naturel : le cavalier surveille e4."),
+        m("e3","e2e3","Maintenant seulement e3 : le pion soutient d4 et libère ton fou f1."),
+        m("e6","e7e6","Les Noirs ouvrent la sortie de leur fou f8."),
+        m("Cf3","g1f3","Le cavalier contrôle e5 et prépare le petit roque.",["e5"]),
+        m("c5","c7c5","Les Noirs attaquent ton pion d4.",["d4"]),
+        m("c3","c2c3","La pyramide c3-d4-e3 : si les Noirs prennent en d4, tu reprends avec un pion et ton centre tient.",["c3","d4","e3"]),
+        m("Cc6","b8c6","Une pièce de plus sur d4."),
+        m("Cbd2","b1d2","Le cavalier va en d2 puisque ton pion occupe c3. Il soutient la poussée e4 et peut renforcer f3."),
+        m("Fd6","f8d6","Le fou noir s’oppose à ton fou f4 et propose l’échange.",["f4"]),
+        m("Fg3","f4g3","Tu gardes ton fou actif. Si …Fxg3, tu reprends hxg3 et ta tour h1 profite de la colonne h ouverte."),
+        m("O-O","e8g8","Les Noirs mettent leur roi à l’abri."),
+        m("Fd3","f1d3","Le fou vise h7. La suite : petit roque, puis Ce5 ou la poussée e4 quand elle est prête.",["h7","e5"])
+      ]},
+    { id:"fianchetto", name:"Contre le fianchetto", vs:"contre 1…Cf6 2…g6",
+      plan:"Joue tranquillement c3 et Cbd2, ou choisis c4 pour prendre plus d’espace au centre. h3 donne au fou f4 une case de repli en h2.",
+      moves:[
+        m("d4","d2d4","Même départ, quel que soit le premier coup noir."),
+        m("Cf6","g8f6","Les Noirs ne s’engagent pas encore au centre."),
+        m("Ff4","c1f4","Même réflexe : le fou sort tout de suite.",["f4"]),
+        m("g6","g7g6","Les Noirs préparent un fianchetto : leur fou ira en g7."),
+        m("e3","e2e3","Le pion soutient d4 et libère ton fou f1."),
+        m("Fg7","f8g7","Le fou g7 vise la grande diagonale, jusqu’à ton pion b2.",["b2"]),
+        m("Cf3","g1f3","Le cavalier contrôle e5 et prépare le roque."),
+        m("O-O","e8g8","Les Noirs roquent."),
+        m("Fe2","f1e2","Placement modeste et solide, le fou ne gêne aucun pion."),
+        m("d6","d7d6","Les Noirs préparent …e5 pour chasser ton fou f4.",["e5"]),
+        m("O-O","e1g1","Ton roi est à l’abri avant que le centre ne s’ouvre."),
+        m("Cbd7","b8d7","Une pièce de plus derrière la poussée …e5.",["e5"]),
+        m("h3","h2h3","Case de repli en h2 : si …Ch5 ou …e5 chasse ton fou, il recule en h2 et reste sur la même diagonale. Ensuite : c3 et Cbd2, ou c4.",["h2"])
+      ]},
+    { id:"db6", name:"Contre …Db6", vs:"pression rapide sur b2",
+      plan:"Db3 défend b2 et propose l’échange des dames. Après …Dxb3 axb3, tes pions b sont doublés mais la colonne a s’ouvre pour ta tour.",
+      moves:[
+        m("d4","d2d4",""),
+        m("d5","d7d5",""),
+        m("Ff4","c1f4","Le fou sort. Conséquence : b2 n’est plus défendu par lui.",["f4","b2"]),
+        m("c5","c7c5","Les Noirs frappent d4 tout de suite.",["d4"]),
+        m("e3","e2e3","Le pion soutient d4."),
+        m("Cc6","b8c6","Deuxième attaque sur d4."),
+        m("c3","c2c3","La pyramide tient d4."),
+        m("Db6","d8b6","La dame attaque b2 et augmente la pression sur d4.",["b2"]),
+        m("Db3","d1b3","Tu défends b2 et proposes l’échange des dames. Réflexe : dès qu’une dame arrive en b6, vérifie b2.",["b2"]),
+        m("Dxb3","b6b3","Les Noirs acceptent l’échange."),
+        m("axb3","a2b3","Tes pions b sont doublés, mais la colonne a s’ouvre pour ta tour a1. Les dames sont parties : la partie devient calme.",["a1"])
+      ]},
+    { id:"jobava", name:"Londres Jobava", vs:"version offensive avec Cc3",
+      plan:"Cb5 et Ff4 visent ensemble c7 : un cavalier en c7 ferait échec et attaquerait la tour a8. Ton pion c reste bloqué derrière le cavalier, tu renonces au schéma avec c3.",
+      moves:[
+        m("d4","d2d4",""),
+        m("d5","d7d5",""),
+        m("Cc3","b1c3","Le cavalier sort en c3 : c’est la signature du Jobava. Ton pion c reste bloqué derrière lui."),
+        m("Cf6","g8f6",""),
+        m("Ff4","c1f4","Le fou se place sur la diagonale qui mène à c7.",["c7"]),
+        m("e6","e7e6",""),
+        m("e3","e2e3","Le pion soutient d4 et libère le fou f1."),
+        m("c5","c7c5","Les Noirs attaquent d4. La case c7 se vide.",["c7"]),
+        m("Cf3","g1f3",""),
+        m("Cc6","b8c6",""),
+        m("Cb5","c3b5","Deux pièces sur c7. La menace est Cc7+, échec au roi avec attaque de la tour a8. Les Noirs doivent réagir, par exemple avec …Da5+.",["c7"])
+      ]}
+  ];
+
+  // Quiz de réflexes : position = suite de coups depuis le départ
+  const lineU = (id, n) => LINES.find(l=>l.id===id).moves.slice(0,n).map(x=>x.u);
+  const QUIZ = [
+    { moves:["d2d4","d7d5"], prompt:"Les Noirs ont joué 1…d5. Joue le coup qui définit le système de Londres.",
+      good:{"c1f4":"Ff4. Le fou sort avant de fermer sa diagonale avec e3."},
+      near:{"e2e3":"Trop tôt. Après e3, ton fou c1 reste enfermé derrière ses pions.","g1f3":"Coup utile, mais il ne définit pas le Londres. Cherche le coup du fou."},
+      hint:"c1" },
+    { moves:["d2d4","d7d5","c1f4","g8f6"], prompt:"Ton fou est sorti. Quel coup de pion soutient d4 et libère ton autre fou ?",
+      good:{"e2e3":"e3. Maintenant ce coup ne bloque plus rien."},
+      near:{"c2c3":"c3 viendra plus tard. Le pion e d’abord, pour libérer le fou f1."},
+      hint:"e2" },
+    { moves:lineU("db6",8), prompt:"La dame noire arrive en b6. Que menace-t-elle et comment réagir ?",
+      good:{"d1b3":"Db3. Tu défends b2 et proposes l’échange des dames.","d1c1":"Dc1 défend aussi b2. Le coup du répertoire est Db3, qui propose en plus l’échange.","d1c2":"Dc2 défend b2 par la rangée. Le coup du répertoire est Db3, qui propose l’échange."},
+      near:{"b2b3":"b3 sauve le pion mais affaiblit c3, que la dame b6 et le cavalier c6 pourront viser. Défends plutôt avec la dame."},
+      hint:"d1", focus:["b2"] },
+    { moves:lineU("classique",12), prompt:"Le fou noir en d6 propose l’échange de ton fou f4. Comment garder ton fou actif ?",
+      good:{"f4g3":"Fg3. Si …Fxg3, hxg3 ouvre la colonne h pour ta tour."},
+      near:{"f4d6":"Possible, mais tu cèdes ton fou le plus actif. Le plan du répertoire est Fg3."},
+      hint:"f4", focus:["d6"] },
+    { moves:lineU("fianchetto",12), prompt:"Les Noirs préparent …e5 pour chasser ton fou. Offre-lui une case de repli.",
+      good:{"h2h3":"h3. Le fou pourra reculer en h2 sans quitter sa diagonale."},
+      near:{"f4h2":"Tu ne peux pas encore aller en h2 : ton pion l’occupe. Libère d’abord la case."},
+      hint:"h2", focus:["e5"] },
+    { moves:lineU("jobava",10), prompt:"Version Jobava. Quel coup de cavalier, avec le fou f4, vise la case c7 ?",
+      good:{"c3b5":"Cb5. Menace Cc7+, avec attaque du roi et de la tour a8."},
+      near:{"f3e5":"Ce5 est actif, mais il ne vise pas c7. Pense à l’autre cavalier."},
+      hint:"c3", focus:["c7"] },
+    { moves:lineU("classique",15).concat(["b7b6"]), prompt:"Ton développement est terminé. Quelle est la dernière étape du schéma ?",
+      good:{"e1g1":"O-O. Roi à l’abri, tour en jeu : place à Ce5 ou e4."},
+      near:{"f3e5":"Ce5 est le plan, mais mets d’abord ton roi à l’abri.","e3e4":"La poussée e4 est le plan, mais roque d’abord."},
+      hint:"e1" }
+  ];
+
+  // ---------- Position ----------
+  function parseFEN(f){
+    const b = {};
+    f.split("/").forEach((row,i)=>{
+      let file = 0; const rank = 8 - i;
+      for (const ch of row){
+        if (/\d/.test(ch)) file += +ch;
+        else { b[FILES[file]+rank] = ch; file++; }
+      }
+    });
+    return b;
+  }
+  function apply(b, u){
+    const n = Object.assign({}, b);
+    const from = u.slice(0,2), to = u.slice(2,4), p = n[from];
+    delete n[from]; n[to] = p;
+    const castle = {"Ke1g1":["h1","f1"],"Ke1c1":["a1","d1"],"ke8g8":["h8","f8"],"ke8c8":["a8","d8"]}[p+from+to];
+    if (castle){ n[castle[1]] = n[castle[0]]; delete n[castle[0]]; }
+    return n;
+  }
+  function posFrom(list){ return list.reduce(apply, parseFEN(START)); }
+
+  // ---------- Progression (confort local, facultatif) ----------
+  const KEY = "atelier-londres-v1";
+  let progress = {};
+  try { progress = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e){ progress = {}; }
+  function saveProgress(){ try { localStorage.setItem(KEY, JSON.stringify(progress)); } catch(e){} }
+  function statusOf(id){
+    const p = progress[id] || {runs:0, clean:0};
+    if (p.clean >= 3) return {cls:"done", txt:"Maîtrisée"};
+    if (p.runs > 0) return {cls:"prog", txt:p.clean + "/3 sans faute"};
+    return {cls:"", txt:"À découvrir"};
+  }
+
+  // ---------- État ----------
+  const S = { mode:"study", line:0, ply:0, sel:null, errors:0, hint:0, busy:false, flash:null, log:[], fb:null,
+              q:0, qResults:[], qDone:false, qWrong:0 };
+
+  const $ = id => document.getElementById(id);
+  const boardEl = $("board"), panel = $("panel");
+
+  function currentLine(){ return LINES[S.line]; }
+  function moveLabel(i, mv){
+    const n = Math.floor(i/2) + 1;
+    return i % 2 === 0 ? n + ". " + mv.s : n + "… " + mv.s;
+  }
+
+  // ---------- Rendu du plateau ----------
+  function renderBoard(el, pos, o){
+    o = o || {};
+    let html = "";
+    for (let r = 8; r >= 1; r--){
+      for (let f = 0; f < 8; f++){
+        const sq = FILES[f] + r;
+        const dark = (f + r) % 2 === 1;
+        const cls = ["sq"];
+        if (dark) cls.push("dk");
+        if (o.last && o.last.indexOf(sq) > -1) cls.push("last");
+        if (o.sel === sq) cls.push("sel");
+        if (o.hint && o.hint.indexOf(sq) > -1) cls.push("hint");
+        if (o.focus && o.focus.indexOf(sq) > -1) cls.push("focus");
+        if (o.flash && o.flash.sq === sq) cls.push(o.flash.cls);
+        const p = pos[sq];
+        let inner = "", label = sq;
+        if (p){
+          const t = p.toLowerCase(), white = p === t.toUpperCase() && p !== t;
+          inner = '<span class="pc ' + (white ? "w" : "b") + '"><span class="f">' + GLYPH_F[t] + VS + '</span><span class="o">' + GLYPH_O[t] + VS + '</span></span>';
+          label += ", " + NAMES[t] + (white ? " blanc" : " noir");
+        }
+        if (f === 0) inner += '<span class="co r">' + r + '</span>';
+        if (r === 1) inner += '<span class="co f">' + FILES[f] + '</span>';
+        const tag = o.interactive ? "button" : "div";
+        const attrs = o.interactive ? ' type="button" data-sq="' + sq + '" aria-label="' + label + '"' : "";
+        html += "<" + tag + ' class="' + cls.join(" ") + '"' + attrs + ">" + inner + "</" + tag + ">";
+      }
+    }
+    el.innerHTML = html;
+    el.classList.toggle("live", !!o.interactive);
+  }
+
+  function lastOf(list){ if (!list.length) return null; const u = list[list.length-1]; return [u.slice(0,2), u.slice(2,4)]; }
+
+  // ---------- Rendu général ----------
+  function render(){
+    document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.mode === S.mode ? "true" : "false"));
+    const linesEl = $("lines");
+    linesEl.hidden = S.mode === "quiz";
+    linesEl.innerHTML = LINES.map((l,i) => {
+      const st = statusOf(l.id);
+      return '<button class="line-btn" type="button" data-line="' + i + '" aria-pressed="' + (i === S.line && S.mode !== "quiz") + '">' +
+        '<span class="nm">' + l.name + '</span><span class="vs">' + l.vs + '</span>' +
+        '<span class="chip ' + st.cls + '">' + st.txt + '</span></button>';
+    }).join("");
+    if (S.mode === "study") renderStudy();
+    else if (S.mode === "train") renderTrain();
+    else renderQuiz();
+  }
+
+  function renderStudy(){
+    const L = currentLine(), list = L.moves.slice(0, S.ply).map(x=>x.u);
+    const mv = S.ply > 0 ? L.moves[S.ply-1] : null;
+    renderBoard(boardEl, posFrom(list), { last:lastOf(list), focus: mv ? mv.f : [] });
+    $("turn").innerHTML = "Coup <b>" + S.ply + "</b> / " + L.moves.length;
+    $("boardBtns").innerHTML =
+      '<button class="btn icon" type="button" data-act="first" aria-label="Début"' + (S.ply===0?" disabled":"") + '>|◀</button>' +
+      '<button class="btn icon" type="button" data-act="prev" aria-label="Coup précédent"' + (S.ply===0?" disabled":"") + '>◀</button>' +
+      '<button class="btn icon primary" type="button" data-act="next" aria-label="Coup suivant"' + (S.ply===L.moves.length?" disabled":"") + '>▶</button>' +
+      '<button class="btn icon" type="button" data-act="last" aria-label="Fin"' + (S.ply===L.moves.length?" disabled":"") + '>▶|</button>';
+
+    let rows = "";
+    for (let i = 0; i < L.moves.length; i += 2){
+      const cell = j => {
+        if (j >= L.moves.length) return "<span></span>";
+        const c = j === S.ply-1 ? " cur" : (j >= S.ply ? " future" : "");
+        return '<button class="mv' + c + '" type="button" data-ply="' + (j+1) + '">' + L.moves[j].s + '</button>';
+      };
+      rows += '<span class="no">' + (i/2+1) + '.</span>' + cell(i) + cell(i+1);
+    }
+    const now = mv
+      ? '<div class="now"><div class="san">' + moveLabel(S.ply-1, mv) + ' <small>' + (S.ply % 2 ? "Blancs" : "Noirs") + '</small></div><p>' + (mv.n || "Coup naturel, rien de particulier à retenir.") + '</p></div>'
+      : '<div class="now"><div class="san">Position de départ</div><p>Avance coup par coup avec ▶ ou la flèche droite du clavier. Chaque coup est expliqué ici, et les cases clés sont entourées sur l’échiquier.</p></div>';
+    panel.innerHTML =
+      '<div><h2>' + L.name + '</h2><p class="sub">' + L.vs + '</p></div>' + now +
+      '<div class="movelist" aria-label="Liste des coups">' + rows + '</div>' +
+      '<div class="plan"><span class="lbl">Le plan</span><p>' + L.plan + '</p></div>' +
+      '<div class="btns"><button class="btn primary" type="button" data-act="go-train">S’entraîner sur cette ligne</button></div>';
+  }
+
+  function renderTrain(){
+    const L = currentLine(), list = L.moves.slice(0, S.ply).map(x=>x.u);
+    const done = S.ply >= L.moves.length;
+    const exp = done ? null : L.moves[S.ply];
+    const hint = [];
+    if (!done && S.ply % 2 === 0){
+      if (S.hint >= 1) hint.push(exp.u.slice(0,2));
+      if (S.hint >= 2) hint.push(exp.u.slice(2,4));
+    }
+    renderBoard(boardEl, posFrom(list), { interactive: !done && !S.busy, last:lastOf(list), sel:S.sel, hint:hint, flash:S.flash });
+    $("turn").innerHTML = done ? "<b>Ligne terminée</b>" : (S.ply % 2 === 0 ? "À toi de jouer, <b>Blancs</b>" : "Les Noirs réfléchissent…");
+    $("boardBtns").innerHTML =
+      '<button class="btn" type="button" data-act="hint"' + (done || S.ply % 2 ? " disabled" : "") + '>Indice</button>' +
+      '<button class="btn" type="button" data-act="restart">Recommencer</button>';
+
+    let fb = "";
+    if (done){
+      const p = progress[L.id] || {runs:0, clean:0};
+      fb = '<div class="fb ' + (S.errors === 0 ? "good" : "") + '"><p><strong>' + (S.errors === 0 ? "Sans faute." : S.errors + (S.errors > 1 ? " erreurs." : " erreur.")) + '</strong> ' +
+        (S.errors === 0 ? "Ligne validée. Encore " + Math.max(0, 3 - p.clean) + " passage(s) sans faute pour la maîtriser." : "Rejoue-la pour la valider sans faute.") + '</p>' +
+        (p.clean >= 3 ? "<p>Cette ligne est maîtrisée. Passe à la suivante.</p>" : "") + '</div>' +
+        '<div class="plan"><span class="lbl">À retenir</span><p>' + L.plan + '</p></div>' +
+        '<div class="btns"><button class="btn primary" type="button" data-act="restart">Rejouer</button><button class="btn" type="button" data-act="nextline">Ligne suivante</button></div>';
+    } else if (S.fb){
+      fb = '<div class="fb ' + S.fb.cls + '"><p>' + S.fb.html + '</p></div>';
+    } else {
+      fb = '<div class="fb"><p><strong>Tu joues les Blancs.</strong> Clique sur une pièce, puis sur sa case d’arrivée. Les Noirs répondent selon la ligne.</p></div>';
+    }
+    const log = S.log.slice(-4).reverse().map(x => "<li>" + x + "</li>").join("");
+    panel.innerHTML =
+      '<div><h2>' + L.name + '</h2><p class="sub">' + L.vs + ' · joue de mémoire</p></div>' + fb +
+      '<div class="stats"><span><b>' + Math.ceil(Math.min(S.ply, L.moves.length)/2) + '/' + Math.ceil(L.moves.length/2) + '</b>coups blancs</span><span><b>' + S.errors + '</b>erreurs</span><span><b>' + statusOf(L.id).txt + '</b>progression</span></div>' +
+      (log ? '<div><span class="lbl">Derniers coups</span><ul class="log">' + log + '</ul></div>' : "") +
+      '<p class="howto">Indice : un clic montre la pièce à jouer, un second montre la case d’arrivée. Après deux erreurs, la pièce s’allume toute seule.</p>';
+  }
+
+  function renderQuiz(){
+    const Q = QUIZ[S.q], pos = posFrom(Q.moves);
+    const hint = S.hint >= 1 && !S.qDone ? [Q.hint] : [];
+    renderBoard(boardEl, pos, { interactive: !S.qDone, last:lastOf(Q.moves), sel:S.sel, hint:hint, focus:Q.focus || [], flash:S.flash });
+    $("turn").innerHTML = "Question <b>" + (S.q+1) + "</b> / " + QUIZ.length;
+    $("boardBtns").innerHTML =
+      '<button class="btn" type="button" data-act="qhint"' + (S.qDone ? " disabled" : "") + '>Indice</button>' +
+      '<button class="btn primary" type="button" data-act="qnext"' + (S.qDone ? "" : " disabled") + '>' + (S.q === QUIZ.length-1 ? "Recommencer" : "Question suivante") + '</button>';
+    const dots = QUIZ.map((_,i) => '<span class="dot ' + (S.qResults[i] === true ? "ok" : S.qResults[i] === false ? "ko" : (i === S.q ? "cur" : "")) + '"></span>').join("");
+    const score = S.qResults.filter(x => x === true).length;
+    const fb = S.fb ? '<div class="fb ' + S.fb.cls + '"><p>' + S.fb.html + '</p></div>' : "";
+    const last = S.q === QUIZ.length-1 && S.qDone
+      ? '<div class="fb"><p><strong>Score : ' + score + ' / ' + QUIZ.length + '.</strong> Une question est réussie si tu trouves au premier essai.</p></div>' : "";
+    panel.innerHTML =
+      '<div><h2>Réflexes du Londres</h2><p class="sub">Les positions clés des quatre lignes, dans le désordre de la partie.</p></div>' +
+      '<div class="dots" aria-hidden="true">' + dots + '</div>' +
+      '<p class="qprompt">' + Q.prompt + '</p>' + fb + last +
+      '<p class="howto">Les Blancs jouent. Clique la pièce puis sa case d’arrivée. Une case entourée signale l’endroit sensible.</p>';
+  }
+
+  // ---------- Actions ----------
+  function flash(sq, cls, ms){
+    S.flash = {sq:sq, cls:cls};
+    setTimeout(() => { if (S.flash && S.flash.sq === sq){ S.flash = null; render(); } }, ms || 650);
+  }
+
+  function isWhitePiece(p){ return p && p === p.toUpperCase(); }
+
+  function handleSquare(sq){
+    let pos, turnWhite = true;
+    if (S.mode === "train"){
+      if (S.busy || S.ply % 2 === 1 || S.ply >= currentLine().moves.length) return;
+      pos = posFrom(currentLine().moves.slice(0, S.ply).map(x=>x.u));
+    } else if (S.mode === "quiz"){
+      if (S.qDone) return;
+      pos = posFrom(QUIZ[S.q].moves);
+    } else return;
+    if (!S.sel){
+      if (isWhitePiece(pos[sq])){ S.sel = sq; render(); }
+      return;
+    }
+    if (sq === S.sel){ S.sel = null; render(); return; }
+    if (isWhitePiece(pos[sq])){ S.sel = sq; render(); return; }
+    const u = S.sel + sq;
+    S.sel = null;
+    if (S.mode === "train") tryTrain(u, sq); else tryQuiz(u, sq);
+  }
+
+  function tryTrain(u, sq){
+    const L = currentLine(), exp = L.moves[S.ply];
+    if (u === exp.u){
+      S.log.push("<b>" + moveLabel(S.ply, exp) + "</b> " + (exp.n || ""));
+      S.fb = { cls:"good", html:"<strong>" + moveLabel(S.ply, exp) + ".</strong> " + (exp.n || "Bien joué.") };
+      S.ply++; S.hint = 0;
+      flash(sq, "ok");
+      if (S.ply >= L.moves.length){ finishLine(); render(); return; }
+      S.busy = true; render();
+      setTimeout(() => {
+        const b = L.moves[S.ply];
+        S.log.push("<b>" + moveLabel(S.ply, b) + "</b> " + (b.n || ""));
+        S.ply++; S.busy = false;
+        if (S.ply >= L.moves.length) finishLine();
+        render();
+      }, 650);
+    } else {
+      S.errors++;
+      if (S.errors > 0 && S.hint < 1 && countErrorsThisMove() >= 2) S.hint = 1;
+      S.fb = { cls:"bad", html:"<strong>Pas ce coup-là.</strong> " + nudge(exp) };
+      flash(sq, "ko");
+      render();
+    }
+  }
+  let moveErr = {ply:-1, n:0};
+  function countErrorsThisMove(){
+    if (moveErr.ply !== S.ply) moveErr = {ply:S.ply, n:0};
+    moveErr.n++; return moveErr.n;
+  }
+  function nudge(exp){
+    const pos = posFrom(currentLine().moves.slice(0, S.ply).map(x=>x.u));
+    const p = pos[exp.u.slice(0,2)];
+    const name = p ? NAMES[p.toLowerCase()] : "pièce";
+    return "Le coup attendu se joue avec un " + name + ". Relis le plan ou demande un indice.";
+  }
+  function finishLine(){
+    const id = currentLine().id;
+    const p = progress[id] || {runs:0, clean:0};
+    p.runs++; if (S.errors === 0) p.clean++;
+    progress[id] = p; saveProgress();
+  }
+
+  function tryQuiz(u, sq){
+    const Q = QUIZ[S.q];
+    if (Q.good[u]){
+      if (S.qResults[S.q] === undefined) S.qResults[S.q] = true;
+      S.qDone = true;
+      S.fb = { cls:"good", html:"<strong>Oui.</strong> " + Q.good[u] };
+      flash(sq, "ok");
+    } else {
+      S.qResults[S.q] = false;
+      S.fb = { cls:"bad", html:"<strong>Pas ce coup-là.</strong> " + (Q.near[u] || "Relis la consigne et regarde la case entourée. Tu peux demander un indice.") };
+      flash(sq, "ko");
+    }
+    render();
+  }
+
+  function resetTrain(){ S.ply = 0; S.sel = null; S.errors = 0; S.hint = 0; S.busy = false; S.flash = null; S.log = []; S.fb = null; moveErr = {ply:-1, n:0}; }
+  function resetQuizItem(){ S.sel = null; S.hint = 0; S.qDone = false; S.fb = null; S.flash = null; }
+
+  function setMode(mode){
+    S.mode = mode; S.sel = null; S.flash = null; S.fb = null;
+    if (mode === "train") resetTrain();
+    if (mode === "study") S.ply = 0;
+    if (mode === "quiz"){ S.q = 0; S.qResults = []; resetQuizItem(); }
+    render();
+  }
+
+  document.addEventListener("click", e => {
+    const t = e.target.closest("button");
+    if (!t) return;
+    if (t.dataset.mode){ setMode(t.dataset.mode); return; }
+    if (t.dataset.line){
+      S.line = +t.dataset.line;
+      if (S.mode === "train") resetTrain(); else S.ply = 0;
+      render(); return;
+    }
+    if (t.dataset.sq){ handleSquare(t.dataset.sq); return; }
+    if (t.dataset.ply){ S.ply = +t.dataset.ply; render(); return; }
+    const L = currentLine();
+    switch (t.dataset.act){
+      case "first": S.ply = 0; break;
+      case "prev": S.ply = Math.max(0, S.ply-1); break;
+      case "next": S.ply = Math.min(L.moves.length, S.ply+1); break;
+      case "last": S.ply = L.moves.length; break;
+      case "go-train": setMode("train"); return;
+      case "hint": S.hint = Math.min(2, S.hint+1); break;
+      case "restart": resetTrain(); break;
+      case "nextline": S.line = (S.line+1) % LINES.length; resetTrain(); break;
+      case "qhint": S.hint = 1; break;
+      case "qnext":
+        if (S.q === QUIZ.length-1){ S.q = 0; S.qResults = []; } else S.q++;
+        resetQuizItem(); break;
+      default: return;
+    }
+    render();
+  });
+
+  document.addEventListener("keydown", e => {
+    if (S.mode !== "study") return;
+    if (e.target.closest && e.target.closest("input,textarea")) return;
+    const L = currentLine();
+    if (e.key === "ArrowRight"){ S.ply = Math.min(L.moves.length, S.ply+1); render(); }
+    if (e.key === "ArrowLeft"){ S.ply = Math.max(0, S.ply-1); render(); }
+  });
+
+  // Réinitialisation en deux temps (pas de confirm() dans le cadre)
+  const resetBtn = $("resetBtn");
+  let armed = false;
+  resetBtn.addEventListener("click", () => {
+    if (!armed){ armed = true; resetBtn.textContent = "Confirmer l’effacement ?"; resetBtn.classList.add("warn");
+      setTimeout(() => { armed = false; resetBtn.textContent = "Effacer ma progression"; resetBtn.classList.remove("warn"); }, 4000);
+      return; }
+    progress = {}; saveProgress(); armed = false;
+    resetBtn.textContent = "Progression effacée"; resetBtn.classList.remove("warn");
+    render();
+  });
+
+  // Schéma cible (pièces blanches seulement)
+  renderBoard($("mini"), parseFEN("8/8/8/8/3P1B2/2PBPN2/PP1N1PPP/R2Q1RK1"), { focus:["f4"] });
+
+  // Ouvre sur une position parlante : la ligne classique après 2.Ff4
+  S.ply = 3;
+  render();
+})();
+</script>
